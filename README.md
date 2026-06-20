@@ -10,7 +10,7 @@
 ---
 
 ## 🚀 Image
-![The-Food-Corner](assets/image.png)
+![The-Food-Corner](https://ibb.co.com/wZH6Knkp)
 
 
 
