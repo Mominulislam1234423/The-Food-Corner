@@ -10,7 +10,7 @@
 ---
 
 ## 🚀 Image
-![The-Food-Corner](Assets/image.png)
+![The-Food-Corner](assets/image.png)
 
 
 
