@@ -12,7 +12,7 @@ export default function ContactFrom() {
               htmlFor="name"
               className="text-sm font-semibold text-[#4a4a4a] mb-2"
             >
-              Names my name
+              Name
             </label>
             <input
               type="text"

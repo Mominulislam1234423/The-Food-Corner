@@ -18,6 +18,7 @@ import ShoppingCart from "./Pages/ShoppingCart/ShoppingCart.jsx";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import DashBoard from "./Layout/DashBoard.jsx";
 import Cart from "./Pages/DashBoard/Cart/Cart.jsx";
+import PrivateRoute from "./Root/PrivateRoute/PrivateRoute.jsx";
 
 const queryClient = new QueryClient();
 
@@ -67,7 +68,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/dashBoard",
-    element: <DashBoard></DashBoard>,
+    element: (
+      <PrivateRoute>
+        <DashBoard></DashBoard>
+      </PrivateRoute>
+    ),
     children: [
       {
         path: "cart",

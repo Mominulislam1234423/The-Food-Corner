@@ -4,28 +4,58 @@ import { Link, useNavigate } from "react-router";
 import singUpImg from "../../../assets/authentication2.png";
 import singUpbg from "../../../assets/authentication.png";
 import AuthContext from "../AuthContext/AuthContext";
+import useAxiousPublic from "../../hooks/useAxiousPublic";
 
 export default function SignUp() {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const axiosPublic = useAxiousPublic();
 
-  const { creatUser, singInGoogle } = useContext(AuthContext);
+  const { creatUser, singInGoogle, updateUserProfile } =
+    useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSignUp = (e) => {
     e.preventDefault();
     setError("");
 
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters long.");
+      return;
+    }
+
     creatUser(email, password)
       .then((result) => {
         console.log("User Created Successfully:", result.user);
-        alert("Sign Up Successful!");
-        setName("");
-        setEmail("");
-        setPassword("");
-        navigate("/");
+
+        if (updateUserProfile) {
+          updateUserProfile({ displayName: name })
+            .then(() => {
+              const userInfo = {
+                name: name,
+                email: email,
+              };
+
+              // .post()-এর ভেতরে নেভিগেশন ঢুকিয়ে দেওয়া হয়েছে যেন ডেটাবেজে সেভ হওয়ার পরই পেজ চেঞ্জ হয়
+              axiosPublic
+                .post("/users", userInfo)
+                .then((res) => {
+                  if (res.data.insertedId) {
+                    console.log("user added to the database");
+                  }
+                  clearFormAndNavigate();
+                })
+                .catch((err) => {
+                  console.error("Database Error:", err);
+                  setError("Failed to save user info to database.");
+                });
+            })
+            .catch((err) => setError(err.message));
+        } else {
+          clearFormAndNavigate();
+        }
       })
       .catch((err) => {
         console.error(err.message);
@@ -33,11 +63,24 @@ export default function SignUp() {
       });
   };
 
+  const clearFormAndNavigate = () => {
+    setName("");
+    setEmail("");
+    setPassword("");
+    navigate("/");
+  };
+
   const handleGoogleSignIn = () => {
     singInGoogle()
       .then((result) => {
         console.log("Google Sign In Success:", result.user);
-        navigate("/");
+        const userInfo = {
+          name: result.user?.displayName,
+          email: result.user?.email,
+        };
+        axiosPublic.post("/users", userInfo).then(() => {
+          navigate("/");
+        });
       })
       .catch((err) => setError(err.message));
   };

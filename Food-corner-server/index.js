@@ -30,7 +30,15 @@ async function run() {
 
     const database = client.db("FoodCornerDB");
     const menuCollection = database.collection("menu");
+    const userCollection = database.collection("users");
     const cartCollection = database.collection("cart");
+
+    // user related api
+    app.post("/users", async (req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result);
+    });
 
     app.post("/menu", async (req, res) => {
       try {
