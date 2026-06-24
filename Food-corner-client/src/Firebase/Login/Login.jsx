@@ -9,6 +9,7 @@ import {
   validateCaptcha,
 } from "react-simple-captcha";
 import AuthContext from "../AuthContext/AuthContext";
+import useAxiousPublic from "../../hooks/useAxiousPublic";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -16,6 +17,7 @@ export default function Login() {
   const [captchaInput, setCaptchaInput] = useState("");
   const [error, setError] = useState("");
   const { singInGoogle, singInUser } = useContext(AuthContext);
+  const axiosPublic = useAxiousPublic();
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -31,7 +33,14 @@ export default function Login() {
     singInGoogle()
       .then((result) => {
         console.log("Google Login Success:", result.user);
-        navigate(from, { replace: true });
+        const userInfo = {
+          email: result.user?.email,
+          name: result.user?.displayName,
+        };
+        axiosPublic.post("/users", userInfo).then((res) => {
+          console.log(res.data);
+          navigate(from, { replace: true });
+        });
       })
       .catch((error) => {
         setError(error.message);
