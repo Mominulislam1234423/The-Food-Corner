@@ -28,6 +28,7 @@ export default function Login() {
     loadCaptchaEnginge(6);
   }, []);
 
+  // --- গুগল লগইন ---
   const handleSingGoogle = () => {
     setError("");
     singInGoogle()
@@ -37,8 +38,11 @@ export default function Login() {
           email: result.user?.email,
           name: result.user?.displayName,
         };
+
+        // ডাটাবেজে ইউজার ইনফো সেভ করা হচ্ছে
         axiosPublic.post("/users", userInfo).then((res) => {
-          console.log(res.data);
+          console.log("User DB saved response:", res.data);
+          // টোকেনের কাজ AuthProvider করবে, আমরা শুধু রিডাইরেক্ট করে দেবো
           navigate(from, { replace: true });
         });
       })
@@ -48,6 +52,7 @@ export default function Login() {
       });
   };
 
+  // --- ইমেইল পাসওয়ার্ড লগইন ---
   const handleLogin = (e) => {
     e.preventDefault();
     setError("");
@@ -62,6 +67,7 @@ export default function Login() {
       .then((result) => {
         console.log("User Login Success:", result.user);
         setCaptchaInput("");
+        // লগইন সফল হলে সরাসরি নেভিগেট
         navigate(from, { replace: true });
       })
       .catch((err) => {

@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import useAxiosSecure from "../../../hooks/useAxiosSecure";
 import { FaUsers, FaTrashAlt } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 export default function AllUsers() {
   const axiosSecure = useAxiosSecure();
@@ -8,17 +9,96 @@ export default function AllUsers() {
   const { data: users = [], refetch } = useQuery({
     queryKey: ["allUsers"],
     queryFn: async () => {
-      const res = await axiosSecure.get("/users");
+      // ১. লোকাল স্টোরেজ থেকে টোকেনটি নিয়ে একটি ভ্যারিয়েবলে রাখুন
+      const token = localStorage.getItem("access-token");
+
+      // ২. কনসোলে দেখার জন্য এই লগটি চেক করুন
+      console.log("ফ্রন্টএন্ড থেকে পাঠানো টোকেন:", token);
+
+      const res = await axiosSecure.get("/users", {
+        headers: {
+          // ৩. 'Bearer' এর 'B' বড় হাতের করে দিন
+          authorization: `Bearer ${token}`,
+        },
+      });
       return res.data;
     },
   });
 
   const handleDelete = async (id) => {
-    console.log(`Delete user with id: ${id}`);
+    Swal.fire({
+      title: "Are you sure?",
+      text: "You won't be able to revert this!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#3085d6",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, delete it!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axiosSecure
+          .delete(`/users/${id}`)
+          .then((res) => {
+            if (res.data.deletedCount > 0) {
+              refetch();
+              Swal.fire({
+                title: "Deleted!",
+                text: "Your item has been deleted.",
+                icon: "success",
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Error deleting user:", err);
+            Swal.fire({
+              title: "Error!",
+              text: "Something went wrong while deleting.",
+              icon: "error",
+            });
+          });
+      }
+    });
   };
 
   const handleRoleChange = async (id) => {
-    console.log(`Change role for user with id: ${id}`);
+    Swal.fire({
+      title: "Make Admin?",
+      text: "Are you sure you want to make this user an admin?",
+      icon: "question",
+      showCancelButton: true,
+      confirmButtonColor: "#D1A054",
+      cancelButtonColor: "#d33",
+      confirmButtonText: "Yes, make admin!",
+    }).then((result) => {
+      if (result.isConfirmed) {
+        axiosSecure
+          .patch(`/users/role/${id}`, { role: "admin" })
+          .then((res) => {
+            if (res.data.modifiedCount > 0) {
+              refetch();
+              Swal.fire({
+                title: "Updated!",
+                text: "User role has been updated to admin.",
+                icon: "success",
+              });
+            } else {
+              Swal.fire({
+                title: "No Change",
+                text: "The user is already an admin.",
+                icon: "info",
+              });
+            }
+          })
+          .catch((err) => {
+            console.error("Error updating role:", err);
+            Swal.fire({
+              title: "Error!",
+              text: "Failed to update user role.",
+              icon: "error",
+            });
+          });
+      }
+    });
   };
 
   return (
@@ -65,13 +145,19 @@ export default function AllUsers() {
                   <td className="p-4 text-gray-600 font-medium">{user.name}</td>
                   <td className="p-4 text-gray-500">{user.email}</td>
                   <td className="p-4 text-center">
-                    <button
-                      onClick={() => handleRoleChange(user._id || user.id)}
-                      className="bg-[#D1A054] hover:bg-[#b5853b] text-white p-2.5 rounded shadow-sm inline-flex items-center justify-center transition-colors"
-                      title="Change Role"
-                    >
-                      <FaUsers className="text-lg" />
-                    </button>
+                    {user.role === "admin" ? (
+                      <span className="text-green-600 font-bold uppercase text-xs bg-green-100 px-3 py-1.5 rounded-full inline-block">
+                        Admin
+                      </span>
+                    ) : (
+                      <button
+                        onClick={() => handleRoleChange(user._id || user.id)}
+                        className="bg-[#D1A054] hover:bg-[#b5853b] text-white p-2.5 rounded shadow-sm inline-flex items-center justify-center transition-colors"
+                        title="Make Admin"
+                      >
+                        <FaUsers className="text-lg" />
+                      </button>
+                    )}
                   </td>
                   <td className="p-4 text-center">
                     <button

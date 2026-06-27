@@ -30,35 +30,33 @@ export default function SignUp() {
       .then((result) => {
         console.log("User Created Successfully:", result.user);
 
+        const userInfo = {
+          name: name,
+          email: email,
+        };
+
         if (updateUserProfile) {
           updateUserProfile({ displayName: name })
-            .then(() => {
-              const userInfo = {
-                name: name,
-                email: email,
-              };
-
-              // .post()-এর ভেতরে নেভিগেশন ঢুকিয়ে দেওয়া হয়েছে যেন ডেটাবেজে সেভ হওয়ার পরই পেজ চেঞ্জ হয়
-              axiosPublic
-                .post("/users", userInfo)
-                .then((res) => {
-                  if (res.data.insertedId) {
-                    console.log("user added to the database");
-                  }
-                  clearFormAndNavigate();
-                })
-                .catch((err) => {
-                  console.error("Database Error:", err);
-                  setError("Failed to save user info to database.");
-                });
-            })
-            .catch((err) => setError(err.message));
-        } else {
-          clearFormAndNavigate();
+            .then(() => console.log("Firebase Profile Updated"))
+            .catch((err) => console.error("Profile Update Error:", err));
         }
+
+        axiosPublic
+          .post("/users", userInfo)
+          .then((res) => {
+            console.log("Server Response:", res.data);
+            if (res.data.insertedId) {
+              console.log("user added to the database");
+            }
+            clearFormAndNavigate();
+          })
+          .catch((err) => {
+            console.error("Database Error:", err);
+            setError("Failed to save user info to database.");
+          });
       })
       .catch((err) => {
-        console.error(err.message);
+        console.error("Firebase Auth Error:", err.message);
         setError(err.message);
       });
   };

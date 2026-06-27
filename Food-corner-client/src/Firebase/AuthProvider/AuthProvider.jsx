@@ -9,12 +9,14 @@ import {
   signOut,
 } from "firebase/auth";
 import { auth } from "../Firebae";
+import useAxiousPublic from "../../hooks/useAxiousPublic";
 
 export default function AuthProvider({ children }) {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
   const provider = new GoogleAuthProvider();
+  const axiosPublic = useAxiousPublic();
 
   const singInGoogle = () => {
     setLoading(true);
@@ -38,9 +40,20 @@ export default function AuthProvider({ children }) {
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser);
-      console.log("current user", currentUser);
+      // console.log("current user", currentUser);
+      if (currentUser) {
+        const userInfo = { email: currentUser.email };
+        axiosPublic.post("/jwt", userInfo).then((res) => {
+          if (res.data.token) {
+            localStorage.setItem("access-token", res.data.token);
+          }
+        });
+      } else {
+        localStorage.removeItem("access-token");
+      }
       setLoading(false);
     });
+
     return () => {
       return unsubscribe();
     };
